@@ -1,0 +1,145 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Environment variables - NEVER commit API keys!
+.env
+.env.local
+.env.*.local
+
+# Hive storage files (contains user data)
+*.hive
+*.lock
+
+# SQLite databases (user conversations)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Secure storage (encrypted API keys)
+*.keystore
+*.jks
+
+# Models (downloaded at runtime - too large for Git)
+assets/models/*.onnx
+assets/models/*.bin
+assets/models/*.param
+
+# Logs
+logs/
+*.log
+
+# Coverage
+coverage/
+
+# Test results
+test_results/
+
+# Android
+/android/local.properties
+/android/app/google-services.json
+/android/.gradle/
+/android/captures/
+/android/gradlew
+/android/gradlew.bat
+/android/gradle/wrapper/gradle-wrapper.jar
+/android/.idea/
+/android/app/release/
+
+# iOS/XCode
+/ios/Pods/
+/ios/.symlinks/
+/ios/Flutter/App.framework
+/ios/Flutter/Flutter.framework
+/ios/Flutter/Flutter.podspec
+/ios/Runner.xcworkspace/
+/ios/.generated/
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+/ios/ServiceDefinitions.json
+/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS
+/macos/Flutter/ephemeral/
+/macos/Flutter/Flutter-Debug.xcconfig
+/macos/Flutter/Flutter-Release.xcconfig
+/macos/Flutter/Flutter-Profile.xcconfig
+/macos/.symlinks/
+/macos/Pods/
+
+# Linux
+/linux/flutter/ephemeral/
+
+# Windows
+/windows/flutter/ephemeral/
+
+# Web
+/web/flutter_service_worker.js
+/web/manifest.json
+/web/.last_build_id
+
+# Backup files
+*~
+*.backup
+*.bak
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# User-specific files
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+
+# Keep important directories
+!.vscode/
+!assets/models/.gitkeep
+!assets/animations/.gitkeep
+
+# Documentation build artifacts
+docs/_build/

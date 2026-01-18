@@ -1,0 +1,93 @@
+name: computer_assistant
+description: A Star Trek-inspired voice assistant with custom wake word detection.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ============================================
+  # CORE: Sherpa-ONNX for STT, TTS, and KWS
+  # ============================================
+  sherpa_onnx: ^1.10.40
+  sherpa_onnx_android: ^1.10.40
+
+  # ============================================
+  # Audio Recording & Playback
+  # ============================================
+  record: ^5.1.0              # Audio recording with VAD support
+  just_audio: ^0.9.39         # Audio playback for TTS output
+  audio_session: ^0.1.21      # Audio session management
+  
+  # ============================================
+  # State Management
+  # ============================================
+  provider: ^6.1.2            # Simple state management (good for juniors)
+  
+  # ============================================
+  # Networking & HTTP
+  # ============================================
+  http: ^1.2.2                # HTTP client for LLM APIs
+  dio: ^5.4.3+1               # Advanced HTTP (retries, interceptors)
+  connectivity_plus: ^6.0.3   # Network connectivity monitoring
+
+  # ============================================
+  # Local Storage
+  # ============================================
+  sqflite: ^2.3.3+1                 # SQLite for offline queue
+  path_provider: ^2.1.3             # File system paths
+  shared_preferences: ^2.2.3        # Simple key-value storage
+  hive: ^2.2.3                      # Fast NoSQL (for settings/cache)
+  hive_flutter: ^1.1.0
+  flutter_secure_storage: ^9.2.2    # Encrypted storage for API keys
+
+  # ============================================
+  # Environment & Configuration
+  # ============================================
+  flutter_dotenv: ^5.1.0      # .env file support for API keys
+  
+  # ============================================
+  # Permissions
+  # ============================================
+  permission_handler: ^11.3.1 # Runtime permission requests
+  
+  # ============================================
+  # UI Components
+  # ============================================
+  flutter_animate: ^4.5.0     # Smooth animations
+  lottie: ^3.1.2              # Lottie animations (for listening indicator)
+  
+  # ============================================
+  # Utilities
+  # ============================================
+  uuid: ^4.4.2                # Unique IDs for messages
+  intl: ^0.19.0               # Date/time formatting
+  logger: ^2.3.0              # Logging
+  path: ^1.9.0                # Path manipulation
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  build_runner: ^2.4.9
+  hive_generator: ^2.0.1
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    # Models will be downloaded on first run, but we need placeholder
+    - assets/models/
+    - assets/animations/
+    - .env
+
+  fonts:
+    - family: SpaceMono
+      fonts:
+        - asset: assets/fonts/SpaceMono-Regular.ttf
+        - asset: assets/fonts/SpaceMono-Bold.ttf
+          weight: 700
