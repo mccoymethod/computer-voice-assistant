@@ -13,8 +13,7 @@ dependencies:
   # ============================================
   # CORE: Sherpa-ONNX for STT, TTS, and KWS
   # ============================================
-  sherpa_onnx: ^1.10.40
-  sherpa_onnx_android: ^1.10.40
+  sherpa_onnx: ^1.12.23
 
   # ============================================
   # Audio Recording & Playback
