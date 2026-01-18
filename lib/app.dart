@@ -5,6 +5,7 @@ import 'providers/settings_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/conversation_screen.dart';
+import 'screens/onboarding/welcome_screen.dart';
 import 'theme/tricorder_theme.dart';
 
 /// Main application widget.
@@ -33,9 +34,11 @@ class ComputerAssistantApp extends StatelessWidget {
           // Navigation routes
           initialRoute: '/',
           routes: {
-            '/': (context) => const HomeScreen(),
+            '/': (context) => const _InitialRouteWrapper(),
+            '/home': (context) => const HomeScreen(),
             '/settings': (context) => const SettingsScreen(),
             '/conversation': (context) => const ConversationScreen(),
+            '/onboarding': (context) => const WelcomeScreen(),
           },
 
           // Global error widget
@@ -133,6 +136,26 @@ class ComputerAssistantApp extends StatelessWidget {
           letterSpacing: 0.5,
         ),
       ),
+    );
+  }
+}
+
+/// Initial route wrapper - decides between onboarding and home screen
+class _InitialRouteWrapper extends StatelessWidget {
+  const _InitialRouteWrapper();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, _) {
+        // Show onboarding if no API keys are configured
+        if (settings.needsOnboarding) {
+          return const WelcomeScreen();
+        }
+
+        // Otherwise, show the home screen
+        return const HomeScreen();
+      },
     );
   }
 }

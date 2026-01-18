@@ -3,14 +3,17 @@ import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 
 import '../models/llm_provider.dart';
+import '../services/secure_storage_service.dart';
 
 /// Manages user preferences and settings
 ///
 /// Settings are persisted using Hive for fast access.
+/// API keys are stored securely using SecureStorageService.
 class SettingsProvider extends ChangeNotifier {
   static const String _boxName = 'settings';
 
   final Logger _logger = Logger();
+  final SecureStorageService _secureStorage = SecureStorageService();
   Box? _box;
   bool _isInitialized = false;
 
@@ -67,9 +70,13 @@ class SettingsProvider extends ChangeNotifier {
   int _sttTimeoutSeconds = 30;
   int get sttTimeoutSeconds => _sttTimeoutSeconds;
 
-  /// API Keys (stored securely - in production, use flutter_secure_storage)
+  /// Cached API keys (loaded from secure storage)
   final Map<LLMProvider, String?> _apiKeys = {};
+
+  /// Get API key for a provider (from cache)
   String? getApiKey(LLMProvider provider) => _apiKeys[provider];
+
+  /// Check if provider has a valid API key
   bool hasApiKey(LLMProvider provider) =>
       _apiKeys[provider] != null && _apiKeys[provider]!.isNotEmpty;
 
@@ -82,7 +89,7 @@ class SettingsProvider extends ChangeNotifier {
 
     try {
       _box = await Hive.openBox(_boxName);
-      _loadSettings();
+      await _loadSettings();
       _isInitialized = true;
       _logger.i('Settings loaded');
     } catch (e) {
@@ -90,7 +97,7 @@ class SettingsProvider extends ChangeNotifier {
     }
   }
 
-  void _loadSettings() {
+  Future<void> _loadSettings() async {
     if (_box == null) return;
 
     // Theme
@@ -130,10 +137,26 @@ class SettingsProvider extends ChangeNotifier {
     _keepModelsLoaded = _box!.get('keepModelsLoaded', defaultValue: false);
     _sttTimeoutSeconds = _box!.get('sttTimeoutSeconds', defaultValue: 30);
 
-    // API Keys
+    // Load API keys from secure storage
+    await _loadApiKeys();
+  }
+
+  /// Load all API keys from secure storage
+  Future<void> _loadApiKeys() async {
     for (final provider in LLMProvider.values) {
-      final key = 'apiKey_${provider.name}';
-      _apiKeys[provider] = _box!.get(key);
+      try {
+        final apiKey = await _secureStorage.getApiKey(provider);
+        _apiKeys[provider] = apiKey;
+      } catch (e) {
+        _logger.w('Failed to load API key for ${provider.name}: $e');
+        _apiKeys[provider] = null;
+      }
+    }
+
+    // Load the active provider from secure storage
+    final activeProvider = await _secureStorage.getActiveProvider();
+    if (activeProvider != null) {
+      _defaultProvider = activeProvider;
     }
   }
 
@@ -150,6 +173,7 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setDefaultProvider(LLMProvider provider) async {
     _defaultProvider = provider;
     await _box?.put('defaultProvider', provider.name);
+    await _secureStorage.setActiveProvider(provider);
     notifyListeners();
   }
 
@@ -207,9 +231,27 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Set API key for a provider (saves to secure storage)
   Future<void> setApiKey(LLMProvider provider, String? apiKey) async {
     _apiKeys[provider] = apiKey;
-    await _box?.put('apiKey_${provider.name}', apiKey);
+    if (apiKey != null && apiKey.isNotEmpty) {
+      await _secureStorage.setApiKey(provider, apiKey);
+    } else {
+      await _secureStorage.deleteApiKey(provider);
+    }
+    notifyListeners();
+  }
+
+  /// Delete API key for a provider
+  Future<void> deleteApiKey(LLMProvider provider) async {
+    _apiKeys[provider] = null;
+    await _secureStorage.deleteApiKey(provider);
+    notifyListeners();
+  }
+
+  /// Reload API keys from secure storage
+  Future<void> reloadApiKeys() async {
+    await _loadApiKeys();
     notifyListeners();
   }
 
@@ -229,9 +271,15 @@ class SettingsProvider extends ChangeNotifier {
   /// Check if any LLM is configured
   bool get hasAnyApiKey => LLMProvider.values.any((p) => hasApiKey(p));
 
+  /// Check if user needs to complete onboarding (no API keys configured)
+  bool get needsOnboarding => !hasAnyApiKey;
+
   /// Get list of configured providers
   List<LLMProvider> get configuredProviders =>
       LLMProvider.values.where((p) => hasApiKey(p)).toList();
+
+  /// Get count of configured providers
+  int get configuredProviderCount => configuredProviders.length;
 
   /// Reset all settings to defaults
   Future<void> resetToDefaults() async {

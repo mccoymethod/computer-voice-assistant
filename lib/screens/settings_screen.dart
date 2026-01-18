@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../providers/settings_provider.dart';
 import '../models/llm_provider.dart';
+import '../services/api_key_test_service.dart';
+import '../theme/tricorder_theme.dart';
 
 /// Settings screen for configuring the assistant
 class SettingsScreen extends StatelessWidget {
@@ -29,9 +31,12 @@ class SettingsScreen extends StatelessWidget {
                     if (mode != null) settings.setThemeMode(mode);
                   },
                   items: const [
-                    DropdownMenuItem(value: ThemeMode.system, child: Text('System')),
-                    DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
-                    DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
+                    DropdownMenuItem(
+                        value: ThemeMode.system, child: Text('System')),
+                    DropdownMenuItem(
+                        value: ThemeMode.light, child: Text('Light')),
+                    DropdownMenuItem(
+                        value: ThemeMode.dark, child: Text('Dark')),
                   ],
                 ),
               ),
@@ -57,7 +62,8 @@ class SettingsScreen extends StatelessWidget {
                           if (!configured)
                             const Padding(
                               padding: EdgeInsets.only(left: 4),
-                              child: Icon(Icons.warning, size: 16, color: Colors.orange),
+                              child: Icon(Icons.warning,
+                                  size: 16, color: Colors.orange),
                             ),
                         ],
                       ),
@@ -68,11 +74,38 @@ class SettingsScreen extends StatelessWidget {
 
               // API Keys section
               _buildSectionHeader(context, 'API Keys'),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${settings.configuredProviderCount} of ${LLMProvider.values.length} providers configured',
+                        style: TextStyle(
+                          color: TricorderTheme.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/onboarding'),
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Add Provider'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               ...LLMProvider.values.map((provider) => _buildApiKeyTile(
-                context,
-                settings,
-                provider,
-              )),
+                    context,
+                    settings,
+                    provider,
+                  )),
 
               // Voice section
               _buildSectionHeader(context, 'Voice'),
@@ -119,9 +152,12 @@ class SettingsScreen extends StatelessWidget {
                     if (size != null) settings.setSttModelSize(size);
                   },
                   items: const [
-                    DropdownMenuItem(value: 'tiny', child: Text('Tiny (fastest)')),
-                    DropdownMenuItem(value: 'small', child: Text('Small (balanced)')),
-                    DropdownMenuItem(value: 'medium', child: Text('Medium (accurate)')),
+                    DropdownMenuItem(
+                        value: 'tiny', child: Text('Tiny (fastest)')),
+                    DropdownMenuItem(
+                        value: 'small', child: Text('Small (balanced)')),
+                    DropdownMenuItem(
+                        value: 'medium', child: Text('Medium (accurate)')),
                   ],
                 ),
               ),
@@ -153,10 +189,10 @@ class SettingsScreen extends StatelessWidget {
       child: Text(
         title.toUpperCase(),
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
-        ),
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
       ),
     );
   }
@@ -167,16 +203,160 @@ class SettingsScreen extends StatelessWidget {
     LLMProvider provider,
   ) {
     final hasKey = settings.hasApiKey(provider);
-    
-    return ListTile(
-      leading: Icon(
-        hasKey ? Icons.check_circle : Icons.circle_outlined,
-        color: hasKey ? Colors.green : null,
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: ListTile(
+        leading: Icon(
+          hasKey ? Icons.check_circle : Icons.circle_outlined,
+          color:
+              hasKey ? TricorderTheme.accentMint : TricorderTheme.textSecondary,
+        ),
+        title: Text(
+          provider.displayName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          hasKey ? 'Configured' : 'Not configured',
+          style: TextStyle(
+            color: hasKey
+                ? TricorderTheme.accentMint
+                : TricorderTheme.textSecondary,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasKey)
+              IconButton(
+                icon: const Icon(Icons.network_check, size: 20),
+                onPressed: () => _testConnection(context, settings, provider),
+                tooltip: 'Test Connection',
+              ),
+            IconButton(
+              icon: const Icon(Icons.edit, size: 20),
+              onPressed: () => _showApiKeyDialog(context, settings, provider),
+              tooltip: 'Edit API Key',
+            ),
+            if (hasKey)
+              IconButton(
+                icon: const Icon(Icons.delete,
+                    size: 20, color: TricorderTheme.accentCoral),
+                onPressed: () =>
+                    _confirmDeleteApiKey(context, settings, provider),
+                tooltip: 'Delete API Key',
+              ),
+          ],
+        ),
       ),
-      title: Text(provider.displayName),
-      subtitle: Text(hasKey ? 'Configured' : 'Not configured'),
-      trailing: const Icon(Icons.edit),
-      onTap: () => _showApiKeyDialog(context, settings, provider),
+    );
+  }
+
+  Future<void> _testConnection(
+    BuildContext context,
+    SettingsProvider settings,
+    LLMProvider provider,
+  ) async {
+    final apiKey = settings.getApiKey(provider);
+    if (apiKey == null) return;
+
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Row(
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(width: 16),
+            Text('Testing ${provider.displayName}...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final testService = ApiKeyTestService();
+      final result = await testService.testApiKey(provider, apiKey);
+
+      if (!context.mounted) return;
+      Navigator.pop(context); // Close loading dialog
+
+      // Show result
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                result.success ? Icons.check_circle : Icons.error,
+                color: result.success
+                    ? TricorderTheme.accentMint
+                    : TricorderTheme.accentCoral,
+              ),
+              const SizedBox(width: 8),
+              Text(result.success ? 'Success!' : 'Connection Failed'),
+            ],
+          ),
+          content: Text(
+            result.success
+                ? 'Successfully connected to ${provider.displayName}'
+                : result.errorMessage ?? 'Unknown error',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.pop(context); // Close loading dialog
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Test failed: $e'),
+          backgroundColor: TricorderTheme.accentCoral,
+        ),
+      );
+    }
+  }
+
+  void _confirmDeleteApiKey(
+    BuildContext context,
+    SettingsProvider settings,
+    LLMProvider provider,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete API Key?'),
+        content: Text(
+          'Are you sure you want to delete your ${provider.displayName} API key?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              settings.deleteApiKey(provider);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${provider.displayName} API key deleted'),
+                ),
+              );
+            },
+            style: TextButton.styleFrom(
+                foregroundColor: TricorderTheme.accentCoral),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
   }
 

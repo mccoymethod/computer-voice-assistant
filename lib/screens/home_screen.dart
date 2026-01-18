@@ -6,6 +6,7 @@ import '../providers/settings_provider.dart';
 import '../services/memory_service.dart';
 import '../services/model_lifecycle_service.dart';
 import '../theme/tricorder_theme.dart';
+import '../widgets/provider_switcher.dart';
 
 /// Main tricorder-style home screen
 class HomeScreen extends StatefulWidget {
@@ -55,7 +56,18 @@ class _HomeScreenState extends State<HomeScreen>
       body: SafeArea(
         child: Column(
           children: [
-            // Status panels at top
+            // Provider switcher at top
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
+                TricorderTheme.spacingM,
+                TricorderTheme.spacingS,
+                TricorderTheme.spacingM,
+                0,
+              ),
+              child: ProviderSwitcher(),
+            ),
+
+            // Status panels
             _buildStatusPanels(),
 
             // Main conversation area
